@@ -2,6 +2,12 @@ package application;
 
 import java.util.Random;
 
+/*a class for dice to be used in the driver  
+ * @ Umar malik 
+ * 2024-12-17
+ * 
+ */
+
 public class Die {
 	private int value;
 	private int numSides;

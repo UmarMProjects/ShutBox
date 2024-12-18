@@ -1,5 +1,11 @@
 package application;
 
+/*for the tiles of the shut the box game 
+ * @ Umar malik 
+ * 2024-12-17
+ */
+
+
 public class Tile {
 	private int value;
 	private boolean isUp;
