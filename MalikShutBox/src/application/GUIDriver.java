@@ -10,24 +10,26 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-/*A javafx vertion of the shut the box game 
- * @ Umar malik awd
+/* 
+ * A JavaFX version of the Shut The Box game for two players
+ * @ Umar ayoub Malik 
  * 2024-12-17
  */
 
 public class GUIDriver extends Application {
 
 	Die d1 = new Die();
-	int count2 = 0;
+	Die d2 = new Die();
 	private Game game = new Game(5);
 
 	@Override
 	public void start(Stage stage) throws Exception {
 		VBox vbox = new VBox(10);
 		Label title = new Label("Shut The Box");
-		Label roundText = new Label("Round: Number: " + game.getround());
+		Label roundText = new Label("Round: " + game.getCurrentRound());
+		Label currentPlayerText = new Label("Current Player: Player " + game.getCurrentPlayer());
 
-		vbox.getChildren().addAll(title, roundText);
+		vbox.getChildren().addAll(title, roundText, currentPlayerText);
 		HBox tileBox = new HBox(10);
 		Button[] tileBtns = new Button[9];
 		Tile[] tiles = new Tile[9];
@@ -38,26 +40,30 @@ public class GUIDriver extends Application {
 			tileBtns[i].setStyle("-fx-background-color: lightgray;");
 
 			tileBtns[i].setOnAction(e -> {
-				if (((Node) e.getSource()).getStyle().contains("lightgray")) {
-					((Node) e.getSource()).setStyle("-fx-background-color: red;");
-				} else if (((Node) e.getSource()).getStyle().contains("red")) {
-					((Node) e.getSource()).setStyle("-fx-background-color: lightgray;");
+				Button btn = (Button) e.getSource();
+				if (btn.getStyle().contains("lightgray")) {
+					btn.setStyle("-fx-background-color: red;");
+				} else if (btn.getStyle().contains("red")) {
+					btn.setStyle("-fx-background-color: lightgray;");
 				}
 			});
 
 			tileBox.getChildren().add(tileBtns[i]);
 		}
-		Label scoreLabel = new Label("Score: ");
-		Label scoreNum = new Label("0");
+
+		Label scoreLabel = new Label("Player 1 Score: ");
+		Label scoreNum1 = new Label(String.valueOf(game.getPlayer1Score()));
+		Label scoreLabel2 = new Label("Player 2 Score: ");
+		Label scoreNum2 = new Label(String.valueOf(game.getPlayer2Score()));
 
 		tileBox.setAlignment(Pos.CENTER);
-		tileBox.getChildren().addAll(scoreLabel, scoreNum);
+		tileBox.getChildren().addAll(scoreLabel, scoreNum1, scoreLabel2, scoreNum2);
 		vbox.getChildren().add(tileBox);
 
 		Button btnRoll = new Button("ROLL DICE");
 		Button twobtnRoll = new Button("ROLL Two DICE");
 		Button lockinbtn = new Button("Lock In");
-		Button donebtn = new Button("End Round");
+		Button donebtn = new Button("End Turn");
 		Label result1 = new Label("Result: ");
 		Label resultDice = new Label("0");
 
@@ -73,15 +79,17 @@ public class GUIDriver extends Application {
 		btnRoll.setDisable(true);
 		btnRoll.setStyle("-fx-background-color: blue;");
 
-		btnRoll.setOnAction(e -> {
-			resultDice.setText(String.valueOf(d1.roll()));
-			btnRoll.setDisable(true);
+		twobtnRoll.setOnAction(e -> {
+			int diceTotal = d1.roll() + d2.roll();
+			resultDice.setText(String.valueOf(diceTotal));
+			twobtnRoll.setDisable(true);
 			lockinbtn.setDisable(false);
 		});
 
-		twobtnRoll.setOnAction(e -> {
-			int diceTotal = d1.roll() + d1.roll();
+		btnRoll.setOnAction(e -> {
+			int diceTotal = d1.roll();
 			resultDice.setText(String.valueOf(diceTotal));
+			btnRoll.setDisable(true);
 			twobtnRoll.setDisable(true);
 			lockinbtn.setDisable(false);
 		});
@@ -89,77 +97,83 @@ public class GUIDriver extends Application {
 		donebtn.setOnAction(e -> {
 			int score = 0;
 
-			for (int i = 0; i < tileBtns.length; i++) {
-				if (tileBtns[i].getStyle().contains("lightgray") || tileBtns[i].getStyle().contains("red")) {
-					score += Integer.valueOf(tileBtns[i].getText());
-
+			for (Button btn : tileBtns) {
+				if (btn.getStyle().contains("lightgray") || btn.getStyle().contains("red")) {
+					score += Integer.parseInt(btn.getText());
 				}
 			}
 
 			game.addScore(score);
-			game.nextRound();
-			scoreNum.setText(String.valueOf(game.getScore()));
-			twobtnRoll.setDisable(true);
+			game.nextTurn();
+
+			scoreNum1.setText(String.valueOf(game.getPlayer1Score()));
+			scoreNum2.setText(String.valueOf(game.getPlayer2Score()));
+			roundText.setText("Round: " + game.getCurrentRound());
+			currentPlayerText.setText("Current Player: Player " + game.getCurrentPlayer());
+			resultDice.setText("0");
+			twobtnRoll.setDisable(false);
 			btnRoll.setDisable(true);
 			lockinbtn.setDisable(true);
-			twobtnRoll.setStyle("-fx-background-color: blue;");
+			
 			btnRoll.setStyle("-fx-background-color: blue;");
-			lockinbtn.setStyle("-fx-background-color: blue;");
+			twobtnRoll.setStyle("-fx-background-color: gray;");
+
+		
+			for (Button btn : tileBtns) {
+				btn.setStyle("-fx-background-color: lightgray;");
+			}
 
 			if (game.isGameOver()) {
-				title.setText("Game Over end Score: " + game.getScore());
-				btnRoll.setDisable(true);
-				twobtnRoll.setDisable(true);
-				lockinbtn.setDisable(true);
-				donebtn.setDisable(true);
-
-			} else {
-				roundText.setText("Round: Number: " + game.getround());
-				resultDice.setText("0");
-				btnRoll.setDisable(true);
-				btnRoll.setStyle("-fx-background-color: lightgray;");
-				twobtnRoll.setDisable(false);
-				twobtnRoll.setStyle("-fx-background-color: lightgray;");
-				lockinbtn.setDisable(true);
-				lockinbtn.setStyle("-fx-background-color: lightgray;");
-				for (int i = 0; i < tileBtns.length; i++) {
-					tileBtns[i].setStyle("-fx-background-color: lightgray;");
-
-				}
+		        if (game.getPlayer1Score() < game.getPlayer2Score()) {
+		            title.setText("Game Over: Player 2 wins!");
+		        } else if (game.getPlayer2Score() < game.getPlayer1Score()) {
+		            title.setText("Game Over: Player 1 wins!");
+		        } else {
+		            title.setText("Game Over: It's a tie!");
+		        }
+		        btnRoll.setDisable(true);
+		        twobtnRoll.setDisable(true);
+		        lockinbtn.setDisable(true);
+		        donebtn.setDisable(true);
 			}
 		});
 
 		lockinbtn.setOnAction(e -> {
 			int sum = 0;
-
-			for (int i = 0; i < tileBtns.length; i++) {
-				if (tileBtns[i].getStyle().contains("red")) {
-					sum += Integer.valueOf(tileBtns[i].getText());
+			for (Button btn : tileBtns) {
+				if (btn.getStyle().contains("red")) {
+					sum += Integer.valueOf(btn.getText());
 				}
 			}
-
 			if (sum == Integer.valueOf(resultDice.getText())) {
-				for (int i = 0; i < tileBtns.length; i++) {
-					if (tileBtns[i].getStyle().contains("red")) {
-						tileBtns[i].setStyle("-fx-background-color: blue;");
+				
+				for (Button btn : tileBtns) {
+					if (btn.getStyle().contains("red")) {
+						btn.setStyle("-fx-background-color: blue;");
+						
+						
+						
 					}
+					lockinbtn.setDisable(true);
+					
 				}
 				twobtnRoll.setDisable(false);
-				btnRoll.setDisable(true);
-				lockinbtn.setDisable(true);
+				twobtnRoll.setStyle("-fx-background-color: lightgray;");
+				if (tileBtns[6].getStyle().contains("blue") && tileBtns[7].getStyle().contains("blue")
+						&& tileBtns[8].getStyle().contains("blue")) {
+					twobtnRoll.setDisable(true);
+					twobtnRoll.setStyle("-fx-background-color: blue;");
+					btnRoll.setDisable(false);
+					btnRoll.setStyle("-fx-background-color: lightgray;");
+				}
+				
 			}
-
-			if (tileBtns[6].getStyle().contains("blue") && tileBtns[7].getStyle().contains("blue")
-					&& tileBtns[8].getStyle().contains("blue")) {
-				twobtnRoll.setDisable(true);
-				twobtnRoll.setStyle("-fx-background-color: blue;");
-				btnRoll.setDisable(false);
-				btnRoll.setStyle("-fx-background-color: lightgray;");
-			}
+			
 		});
 
-		Scene scene = new Scene(vbox, 500, 200);
+		Scene scene = new Scene(vbox, 600, 300);
 		stage.setScene(scene);
+		stage.setTitle("Shut The Box");
 		stage.show();
 	}
 
